@@ -1,0 +1,15 @@
+# Database connection settings
+# Replace with actual database connection details
+
+# P6 Database
+p6.db.url=jdbc:oracle:thin:@//p6_host:1521/p6_service
+p6.db.username=p6_username
+p6.db.password=p6_password
+
+# EBS Database
+ebs.db.url=jdbc:oracle:thin:@//ebs_host:1521/ebs_service
+ebs.db.username=ebs_username
+ebs.db.password=ebs_password
+
+# Integration settings
+integration.schema=p6_ebs_integration
