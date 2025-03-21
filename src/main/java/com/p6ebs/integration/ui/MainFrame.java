@@ -11,8 +11,6 @@ public class MainFrame extends JFrame {
     private JTabbedPane tabbedPane;
     private JLabel statusLabel;
 
-
-
     public MainFrame() {
         setTitle("P6-EBS Integration Tool");
         setSize(900, 700);
@@ -26,12 +24,13 @@ public class MainFrame extends JFrame {
         // Create tabbed pane
         tabbedPane = new JTabbedPane();
 
-        // Add tabs
-        tabbedPane.addTab("Dashboard", createIcon("dashboard.png"), new DashboardPanel());
-        tabbedPane.addTab("Projects", createIcon("project.png"), new ProjectPanel());
-        tabbedPane.addTab("Tasks", createIcon("task.png"), new TaskPanel());
-        tabbedPane.addTab("Resources", createIcon("resource.png"), new ResourcePanel());
-        tabbedPane.addTab("Logs", createIcon("log.png"), new LogPanel());
+        // Disable tabs initially
+        JPanel placeholderPanel = createPlaceholderPanel();
+        tabbedPane.addTab("Dashboard", placeholderPanel);
+        tabbedPane.addTab("Projects", placeholderPanel);
+        tabbedPane.addTab("Tasks", placeholderPanel);
+        tabbedPane.addTab("Resources", placeholderPanel);
+        tabbedPane.addTab("Logs", placeholderPanel);
 
         // Add to frame
         getContentPane().add(tabbedPane, BorderLayout.CENTER);
@@ -39,9 +38,18 @@ public class MainFrame extends JFrame {
         // Add status bar
         JPanel statusPanel = new JPanel(new BorderLayout());
         statusPanel.setBorder(BorderFactory.createEtchedBorder());
-        statusLabel = new JLabel("Ready");
+        statusLabel = new JLabel("No database connection");
+        statusLabel.setForeground(Color.RED);
         statusPanel.add(statusLabel, BorderLayout.WEST);
         getContentPane().add(statusPanel, BorderLayout.SOUTH);
+    }
+
+    private JPanel createPlaceholderPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel label = new JLabel("Please configure database connection from File > Database Connections", SwingConstants.CENTER);
+        label.setForeground(Color.GRAY);
+        panel.add(label, BorderLayout.CENTER);
+        return panel;
     }
 
     private JMenuBar createMenuBar() {
@@ -68,10 +76,12 @@ public class MainFrame extends JFrame {
         JMenu toolsMenu = new JMenu("Tools");
         JMenuItem syncItem = new JMenuItem("Start Full Sync");
         syncItem.addActionListener(e -> startFullSync());
+        syncItem.setEnabled(false); // Disable until connection is established
         toolsMenu.add(syncItem);
 
         JMenuItem configItem = new JMenuItem("Configuration");
         configItem.addActionListener(e -> openConfigDialog());
+        configItem.setEnabled(false); // Disable until connection is established
         toolsMenu.add(configItem);
         menuBar.add(toolsMenu);
 
@@ -83,6 +93,43 @@ public class MainFrame extends JFrame {
         menuBar.add(helpMenu);
 
         return menuBar;
+    }
+
+    private void openConnectionDialog() {
+        ConnectionDialog dialog = new ConnectionDialog(this);
+        dialog.setVisible(true);
+
+        if (dialog.isConfirmed()) {
+            // Update status and enable tabs/menu items
+            statusLabel.setText("Connected to database");
+            statusLabel.setForeground(Color.BLACK);
+
+            // Replace placeholder panels with actual panels
+            tabbedPane.removeAll();
+            tabbedPane.addTab("Dashboard", createIcon("dashboard.png"), new DashboardPanel());
+            tabbedPane.addTab("Projects", createIcon("project.png"), new ProjectPanel());
+            tabbedPane.addTab("Tasks", createIcon("task.png"), new TaskPanel());
+            tabbedPane.addTab("Resources", createIcon("resource.png"), new ResourcePanel());
+            tabbedPane.addTab("Logs", createIcon("log.png"), new LogPanel());
+
+            // Enable other menu items
+            JMenuBar menuBar = getJMenuBar();
+            if (menuBar != null) {
+                // Enable sync and config items in Tools menu
+                JMenu toolsMenu = menuBar.getMenu(1); // Assuming Tools menu is second
+                if (toolsMenu != null) {
+                    toolsMenu.getItem(0).setEnabled(true); // Sync item
+                    toolsMenu.getItem(1).setEnabled(true); // Config item
+                }
+            }
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Database connection updated successfully.",
+                    "Connection Updated",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        }
     }
 
     private ImageIcon createIcon(String iconName) {
@@ -152,30 +199,11 @@ public class MainFrame extends JFrame {
     private void showAboutDialog() {
         JOptionPane.showMessageDialog(
                 this,
-                "P6-EBS Integration Tool\nVersion 1.0\n\nDeveloped by Your Company",
+                "P6-EBS Integration Tool\nVersion 1.0\n\nDeveloped LIT Consulting",
                 "About",
                 JOptionPane.INFORMATION_MESSAGE
         );
     }
-
-    /**
-     * Open the connection dialog
-     */
-    private void openConnectionDialog() {
-        ConnectionDialog dialog = new ConnectionDialog(this);
-        dialog.setVisible(true);
-
-        if (dialog.isConfirmed()) {
-            statusLabel.setText("Ready - Connected to database");
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Database connection updated successfully.",
-                    "Connection Updated",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-        }
-    }
-
 
     public static void main(String[] args) {
         // Set system look and feel
